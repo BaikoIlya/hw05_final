@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AnonymousUser
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
