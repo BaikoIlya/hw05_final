@@ -29,4 +29,3 @@ class PostModelTest(TestCase):
         for current_name, correct_name in correct_names.items():
             with self.subTest():
                 self.assertEqual(current_name, correct_name, 'incorrect name')
-

@@ -176,7 +176,9 @@ class PostsCreateFormTests(TestCase):
     def test_unfollow_author(self):
         """Проверка отписки от автора"""
         self.authorized_client.get(
-            reverse('posts:profile_unfollow', args=(self.user_follow.username,))
+            reverse(
+                'posts:profile_unfollow', args=(self.user_follow.username,)
+            )
         )
         self.assertFalse(
             Follow.objects.filter(
