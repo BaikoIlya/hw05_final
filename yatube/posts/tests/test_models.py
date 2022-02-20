@@ -22,11 +22,11 @@ class PostModelTest(TestCase):
         """Проверка правильности имён моделей"""
         post = PostModelTest.post
         group = PostModelTest.group
-        post_name = str(post)
-        correct_post_name = post.text[:15]
-        self.assertEqual(post_name, correct_post_name, 'incorrect Post name')
-        group_name = str(group)
-        correct_group_name = group.title
-        self.assertEqual(
-            group_name, correct_group_name, 'incorrect Group name'
-        )
+        correct_names = {
+            str(post): post.text[:15],
+            str(group): group.title
+        }
+        for current_name, correct_name in correct_names.items():
+            with self.subTest():
+                self.assertEqual(current_name, correct_name, 'incorrect name')
+

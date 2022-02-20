@@ -49,7 +49,8 @@ class PostsURLTests(TestCase):
         }
         cls.templates_url_login = {
             '/create/': 'posts/create_post.html',
-            f'/posts/{cls.post.id}/edit/': 'posts/create_post.html'
+            f'/posts/{cls.post.id}/edit/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
         }
 
     def setUp(self):
@@ -116,12 +117,12 @@ class PostsURLTests(TestCase):
         for url, template in self.templates_url_login.items():
             with self.subTest(url=url):
                 response = self.authorized_client.get(url, follow=True)
-                if url == '/create/':
+                if url == f'/posts/{self.post.id}/edit/':
+                    self.assertRedirects(
+                        response, f'/posts/{self.post.id}/'
+                    )
+                else:
                     self.assertEqual(
                         response.status_code, HTTPStatus.OK, 'не автор'
                     )
                     self.assertTemplateUsed(response, template)
-                else:
-                    self.assertRedirects(
-                        response, f'/posts/{self.post.id}/'
-                    )

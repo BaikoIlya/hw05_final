@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 
-from ..models import Post, Group, User, Comment
+from ..models import Post, Group, User, Comment, Follow
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -16,6 +16,7 @@ class PostsCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.user_follow = User.objects.create_user(username='follow')
         cls.user_auth = User.objects.create_user(username='auth')
         cls.group = Group.objects.create(
             title='test group',
@@ -36,10 +37,12 @@ class PostsCreateFormTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
+        self.follow_client = Client()
         self.authorized_client.force_login(self.user_auth)
+        self.follow_client.force_login(self.user_follow)
 
-    def test_correct_post_create(self):
-        """Проверка создания нового поста"""
+    def test_correct_post_create_guest(self):
+        """Проверка не создания нового поста гостем"""
         posts_count = Post.objects.count()
         small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -66,6 +69,9 @@ class PostsCreateFormTests(TestCase):
         )
         self.assertEqual(Post.objects.count(), posts_count)
 
+    def test_correct_post_create(self):
+        """Проверка создания нового поста"""
+        posts_count = Post.objects.count()
         small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
             b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -124,8 +130,8 @@ class PostsCreateFormTests(TestCase):
         self.assertIsNone(current_post.group)
         self.assertEqual(Post.objects.filter(group=self.group).count(), 0)
 
-    def test_correct_comment_create(self):
-        """Проверка создания комментария под постом"""
+    def test_comment_create_guest(self):
+        """Проверка не создания комментария под постом гостем"""
         comment_count = Comment.objects.count()
         form_data = {
             'text': 'Comment text'
@@ -136,6 +142,13 @@ class PostsCreateFormTests(TestCase):
             follow=True,
         )
         self.assertEqual(Comment.objects.count(), comment_count)
+
+    def test_correct_comment_create(self):
+        """Проверка создания комментария под постом"""
+        comment_count = Comment.objects.count()
+        form_data = {
+            'text': 'Comment text'
+        }
         self.authorized_client.post(
             reverse('posts:add_comment', args=(self.post.id,)),
             data=form_data,
@@ -148,3 +161,33 @@ class PostsCreateFormTests(TestCase):
         self.assertEqual(
             response.context['comments'][0], Comment.objects.latest('created')
         )
+
+    def test_follow_author(self):
+        """Проверка подписки на автора"""
+        self.authorized_client.get(
+            reverse('posts:profile_follow', args=(self.user_follow.username,))
+        )
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user_auth, author=self.user_follow
+            ).exists()
+        )
+
+    def test_unfollow_author(self):
+        """Проверка отписки от автора"""
+        self.authorized_client.get(
+            reverse('posts:profile_unfollow', args=(self.user_follow.username,))
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user_auth, author=self.user_follow
+            ).exists()
+        )
+
+    def test_follow_guest(self):
+        """Проверка не возможности подписаться гостем"""
+        url = f'/profile/{self.user_follow.username}/follow/'
+        response = self.guest_client.get(
+            reverse('posts:profile_follow', args=(self.user_follow.username,))
+        )
+        self.assertRedirects(response, f'/auth/login/?next={url}')

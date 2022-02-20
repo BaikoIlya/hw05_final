@@ -1,5 +1,5 @@
-<!DOCTYPE html> <!-- Используется html 5 версии -->
-<html lang="ru"> <!-- Язык сайта - русский -->
+<!DOCTYPE html>
+<html lang="ru">
   <head>
     {% include 'includes/head.html' %}
     <title>{% block title %}{% endblock %}</title>
@@ -7,13 +7,8 @@
   <body>
     {% include 'includes/header.html' %}
     <main>
-      <!-- класс py-5 создает отступы сверху и снизу блока -->
       <div class="container py-5">
-        <!-- <h1>{% block header %}{% endblock %}</h1> -->
-
         {% block content %}{% endblock %}
-
-        <!-- под последним постом нет линии -->
       </div>
     </main>
       {% include 'includes/footer.html' %}
