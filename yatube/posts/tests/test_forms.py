@@ -164,32 +164,32 @@ class PostsCreateFormTests(TestCase):
 
     def test_follow_author(self):
         """Проверка подписки на автора"""
+        follow_cnt = Follow.objects.all().count()
         self.authorized_client.get(
             reverse('posts:profile_follow', args=(self.user_follow.username,))
         )
-        self.assertTrue(
-            Follow.objects.filter(
-                user=self.user_auth, author=self.user_follow
-            ).exists()
-        )
+        self.assertEqual(Follow.objects.all().count(), follow_cnt + 1)
 
     def test_unfollow_author(self):
         """Проверка отписки от автора"""
+        Follow.objects.create(
+            user=self.user_auth,
+            author=self.user_follow
+        )
+        follow_cnt = Follow.objects.all().count()
         self.authorized_client.get(
             reverse(
                 'posts:profile_unfollow', args=(self.user_follow.username,)
             )
         )
-        self.assertFalse(
-            Follow.objects.filter(
-                user=self.user_auth, author=self.user_follow
-            ).exists()
-        )
+        self.assertEqual(Follow.objects.all().count(), follow_cnt - 1)
 
     def test_follow_guest(self):
         """Проверка не возможности подписаться гостем"""
+        follow_cnt = Follow.objects.all().count()
         url = f'/profile/{self.user_follow.username}/follow/'
         response = self.guest_client.get(
             reverse('posts:profile_follow', args=(self.user_follow.username,))
         )
         self.assertRedirects(response, f'/auth/login/?next={url}')
+        self.assertEqual(Follow.objects.all().count(), follow_cnt)
