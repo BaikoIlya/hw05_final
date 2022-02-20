@@ -6,7 +6,7 @@
   {% cache 20 index_page %}
   <h1>Последние обновления на сайте</h1>
   {% include 'posts/includes/switcher.html' %}
-  {% for post in follow_obj %}
+  {% for post in page_obj %}
     <ul>
       <li>
         Автор: {{ post.author.get_full_name }} <a href="{% url 'posts:profile' post.author.username %}">все посты пользователя</a>
